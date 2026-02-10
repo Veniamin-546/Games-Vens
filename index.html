@@ -6,49 +6,88 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --main-color: #00f2ff; --star-color: #ffaa00; --bg-color: #0a0a0c; }
-        body { background: var(--bg-color); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; height: 100vh; }
+        body { background: var(--bg-color); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        #game-container { text-align: center; width: 90%; max-width: 400px; padding-top: 20px; }
-        
-        .balance-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid rgba(0,242,255,0.2); margin-bottom: 20px; }
+        /* Шапка с балансом */
+        .header { padding: 20px; text-align: center; flex-shrink: 0; }
         .amount { font-size: 42px; font-weight: 800; color: var(--main-color); text-shadow: 0 0 15px rgba(0,242,255,0.4); }
-        
-        .main-btn { width: 180px; height: 180px; border-radius: 50%; border: none; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); box-shadow: 0 0 25px rgba(0,242,255,0.15); cursor: pointer; position: relative; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 65px; margin: 0 auto; user-select: none; -webkit-tap-highlight-color: transparent; }
+
+        /* Контентные области */
+        .tab-content { flex-grow: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .tab-content.active { display: flex; }
+
+        /* Вкладка ИГРА */
+        .main-btn { width: 220px; height: 220px; border-radius: 50%; border: none; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); box-shadow: 0 0 30px rgba(0,242,255,0.15); cursor: pointer; font-size: 80px; transition: 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
         .main-btn:active { transform: scale(0.9); }
 
-        .shop-container { margin-top: 20px; width: 100%; display: grid; gap: 8px; }
-        .up-btn { background: #161618; border: 1px solid #333; color: white; padding: 12px 15px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .up-btn b { color: var(--main-color); }
-        .star-btn { border-color: var(--star-color); color: var(--star-color); font-weight: bold; }
+        /* Вкладка МАГАЗИН */
+        .shop-list { width: 100%; display: grid; gap: 12px; }
+        .card { background: #161618; border: 1px solid #333; padding: 15px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; }
+        .card.star { border-color: var(--star-color); }
+        .buy-btn { background: var(--main-color); color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; }
+        .buy-btn.star { background: var(--star-color); }
 
-        .level-badge { background: var(--main-color); color: black; padding: 2px 10px; border-radius: 10px; font-weight: bold; font-size: 12px; margin-bottom: 5px; display: inline-block; }
+        /* Нижняя навигация */
+        .nav-bar { background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; flex-shrink: 0; }
+        .nav-item { color: #555; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+        .nav-item.active { color: var(--main-color); }
+        .nav-icon { font-size: 20px; }
     </style>
 </head>
 <body>
 
-    <div id="game-container">
-        <div class="level-badge" id="lvl-tag">УРОВЕНЬ 1</div>
-        <div class="balance-card">
-            <div class="amount" id="coins">0</div>
-            <div id="income-text" style="color: #888; font-size: 14px;">+1 за клик</div>
-        </div>
+    <div class="header">
+        <div class="amount" id="coins">0</div>
+        <div id="income-text" style="color: #888; font-size: 14px;">+1 за клик</div>
+    </div>
 
+    <div id="game-tab" class="tab-content active">
+        <div style="margin-bottom: 20px; font-weight: bold; color: var(--main-color);" id="lvl-tag">УРОВЕНЬ 1</div>
         <button class="main-btn" id="rocket" onclick="mine(event)">🚀</button>
+        <p style="color: #444; margin-top: 20px;">Кликай на ракету, чтобы добывать энергию</p>
+    </div>
 
-        <div class="shop-container">
-            <div class="up-btn" onclick="upgrade()">
-                <span>Улучшить движок</span>
-                <b id="price-tag">50 💰</b>
+    <div id="shop-tab" class="tab-content">
+        <h2 style="margin-top: 0;">Магазин</h2>
+        <div class="shop-list">
+            <div class="card">
+                <div>
+                    <div style="font-weight: bold;">Улучшить двигатель</div>
+                    <div style="font-size: 12px; color: #888;">+1 к силе клика</div>
+                </div>
+                <button class="buy-btn" onclick="upgrade()" id="price-tag">50 💰</button>
             </div>
 
-            <div class="up-btn star-btn" onclick="buyItem('autoclicker')">
-                <span>🤖 Автокликер (10 мин)</span>
-                <span>100 ⭐</span>
+            <div class="card star">
+                <div>
+                    <div style="font-weight: bold; color: var(--star-color);">🤖 Автокликер</div>
+                    <div style="font-size: 12px; color: #888;">Работает 10 минут</div>
+                </div>
+                <button class="buy-btn star" onclick="buyItem('autoclicker')">100 ⭐</button>
             </div>
-            <div class="up-btn star-btn" onclick="buyItem('booster')">
-                <span>🔥 Буст прибыли x2</span>
-                <span>250 ⭐</span>
+
+            <div class="card star">
+                <div>
+                    <div style="font-weight: bold; color: var(--star-color);">🔥 Супер-Буст</div>
+                    <div style="font-size: 12px; color: #888;">Удваивает всё навсегда</div>
+                </div>
+                <button class="buy-btn star" onclick="buyItem('booster')">250 ⭐</button>
             </div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="openTab('game', this)">
+            <span class="nav-icon">🚀</span>
+            <span>Игра</span>
+        </div>
+        <div class="nav-item" onclick="openTab('shop', this)">
+            <span class="nav-icon">⭐</span>
+            <span>Магазин</span>
+        </div>
+        <div class="nav-item" onclick="tg.showAlert('Раздел в разработке!')">
+            <span class="nav-icon">🏆</span>
+            <span>Топ</span>
         </div>
     </div>
 
@@ -61,17 +100,24 @@
         let price = Number(localStorage.getItem('price')) || 50;
         let multiplier = Number(localStorage.getItem('multiplier')) || 1;
 
+        function openTab(tabName, el) {
+            // Переключение вкладок
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            document.getElementById(tabName + '-tab').classList.add('active');
+            el.classList.add('active');
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
         function updateUI() {
             document.getElementById('coins').innerText = Math.floor(coins);
-            document.getElementById('income-text').innerText = `+${power * multiplier} за клик`;
+            document.getElementById('income-text').innerText = `Прибыль: +${power * multiplier}`;
             document.getElementById('price-tag').innerText = `${price} 💰`;
             
-            // Смена ракеты в зависимости от уровня прокачки (power)
             let rocket = document.getElementById('rocket');
-            let lvlTag = document.getElementById('lvl-tag');
-            if (power >= 50) { rocket.innerText = '🛸'; lvlTag.innerText = 'УРОВЕНЬ: ГАЛАКТИКА'; }
-            else if (power >= 25) { rocket.innerText = '🛰️'; lvlTag.innerText = 'УРОВЕНЬ: ОРБИТА'; }
-            else if (power >= 10) { rocket.innerText = '✈️'; lvlTag.innerText = 'УРОВЕНЬ: НЕБО'; }
+            if (power >= 50) rocket.innerText = '🛸';
+            else if (power >= 20) rocket.innerText = '🛰️';
             
             localStorage.setItem('coins', coins);
             localStorage.setItem('power', power);
@@ -81,14 +127,6 @@
         function mine(e) {
             coins += (power * multiplier);
             tg.HapticFeedback.impactOccurred('medium');
-            
-            // Всплывающее число +1
-            const plus = document.createElement('div');
-            plus.innerText = `+${power * multiplier}`;
-            plus.style.cssText = `position:absolute; left:${e.clientX}px; top:${e.clientY}px; color:var(--main-color); font-weight:bold; pointer-events:none; animation: fadeUp 0.8s forwards;`;
-            document.body.appendChild(plus);
-            setTimeout(() => plus.remove(), 800);
-            
             updateUI();
         }
 
@@ -97,23 +135,17 @@
                 coins -= price;
                 power += 1;
                 price = Math.floor(price * 1.6);
-                tg.HapticFeedback.notificationOccurred('success');
                 updateUI();
+                tg.HapticFeedback.notificationOccurred('success');
             } else {
-                tg.HapticFeedback.notificationOccurred('error');
+                tg.showPopup({ message: "Недостаточно монет!" });
             }
         }
 
         function buyItem(id) {
-            // Отправляем данные в RoboChat
+            // Сигнал боту на оплату
             tg.sendData(JSON.stringify({ action: "buy", item: id }));
-            tg.HapticFeedback.impactOccurred('heavy');
         }
-
-        // Анимация всплывающих цифр
-        const style = document.createElement('style');
-        style.innerHTML = `@keyframes fadeUp { to { transform: translateY(-50px); opacity: 0; } }`;
-        document.head.appendChild(style);
 
         updateUI();
     </script>
