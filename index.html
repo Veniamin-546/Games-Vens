@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #0f0f0f; color: #e0e0e0; text-align: center; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        .balance { font-size: 42px; font-weight: bold; color: #00d2ff; text-shadow: 0 0 10px rgba(0,210,255,0.5); margin: 30px 0; }
+        .card { background: #1a1a1a; border: 1px solid #333; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        button { background: linear-gradient(45deg, #0088cc, #00d2ff); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-size: 18px; font-weight: bold; width: 100%; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
+        .stats { margin-top: 10px; font-size: 14px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Колония Z</h1>
+        <div class="balance"><span id="coins">0</span> 🔋</div>
+        
+        <div style="margin-bottom: 20px;">
+            <button onclick="mine()">ДОБЫВАТЬ</button>
+        </div>
+
+        <div style="border-top: 1px solid #333; pt-20px; padding-top: 20px;">
+            <p id="upgrade-info">Уровень шахты: 1</p>
+            <button onclick="upgrade()" id="up-btn" style="background: #222; font-size: 14px;">Улучшить (+1/клик) — 💰 50</button>
+        </div>
+        
+        <div class="stats">Прибыль за клик: <span id="per-click">1</span></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Загрузка данных из памяти телефона
+        let coins = Number(localStorage.getItem('coins')) || 0;
+        let power = Number(localStorage.getItem('power')) || 1;
+        let price = Number(localStorage.getItem('price')) || 50;
+
+        function updateUI() {
+            document.getElementById('coins').innerText = Math.floor(coins);
+            document.getElementById('per-click').innerText = power;
+            document.getElementById('upgrade-info').innerText = `Уровень шахты: ${power}`;
+            document.getElementById('up-btn').innerText = `Улучшить — 💰 ${price}`;
+            
+            // Сохраняем в память при каждом обновлении
+            localStorage.setItem('coins', coins);
+            localStorage.setItem('power', power);
+            localStorage.setItem('price', price);
+        }
+
+        function mine() {
+            coins += power;
+            tg.HapticFeedback.impactOccurred('light'); // Легкая вибрация
+            updateUI();
+        }
+
+        function upgrade() {
+            if (coins >= price) {
+                coins -= price;
+                power += 1;
+                price = Math.floor(price * 1.5); // Цена растет
+                tg.HapticFeedback.notificationOccurred('success');
+                updateUI();
+            } else {
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        updateUI(); // Инициализация при запуске
+    </script>
+</body>
+</html>
