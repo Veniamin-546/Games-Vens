@@ -8,28 +8,32 @@
         :root { --main-color: #00f2ff; --star-color: #ffaa00; --bg-color: #0a0a0c; }
         body { background: var(--bg-color); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
         
-        .header { padding: 20px; text-align: center; flex-shrink: 0; }
-        .amount { font-size: 48px; font-weight: 900; color: var(--main-color); text-shadow: 0 0 15px rgba(0,242,255,0.4); }
+        .header { padding: 15px 20px; text-align: center; flex-shrink: 0; }
+        .amount { font-size: 42px; font-weight: 900; color: var(--main-color); text-shadow: 0 0 15px rgba(0,242,255,0.4); }
+        
+        /* Шкала прогресса */
+        .progress-container { width: 100%; height: 6px; background: #1a1a1c; border-radius: 3px; margin-top: 10px; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: var(--main-color); box-shadow: 0 0 10px var(--main-color); transition: width 0.3s; }
 
         .tab-content { flex-grow: 1; display: none; flex-direction: column; align-items: center; padding: 15px; overflow-y: auto; }
         .tab-content.active { display: flex; }
 
         .game-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-around; width: 100%; }
         
-        .main-btn { width: 220px; height: 220px; border-radius: 50%; border: none; background: radial-gradient(circle, #222 0%, #000 100%); box-shadow: 0 0 30px rgba(0,242,255,0.15); cursor: pointer; font-size: 80px; transition: 0.05s; -webkit-tap-highlight-color: transparent; }
+        .main-btn { width: 200px; height: 200px; border-radius: 50%; border: 4px solid #1a1a1c; background: radial-gradient(circle, #222 0%, #000 100%); cursor: pointer; font-size: 80px; transition: transform 0.05s; -webkit-tap-highlight-color: transparent; }
         .main-btn:active { transform: scale(0.92); }
 
-        .quick-upgrades { width: 100%; max-width: 350px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .q-up-btn { background: #1a1a1c; border: 1px solid #333; border-radius: 16px; padding: 12px; text-align: center; cursor: pointer; }
-        .q-up-btn b { color: var(--main-color); display: block; font-size: 14px; }
-        .q-up-btn span { font-size: 10px; color: #777; text-transform: uppercase; }
+        .quick-upgrades { width: 100%; max-width: 350px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .q-up-btn { background: #161618; border: 1px solid #282828; border-radius: 16px; padding: 12px; text-align: center; cursor: pointer; }
+        .q-up-btn b { color: var(--main-color); display: block; font-size: 14px; margin-top: 4px; }
+        .q-up-btn span { font-size: 10px; color: #777; font-weight: bold; }
 
         /* Окно офлайн дохода */
-        #offline-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .modal-card { background: #161618; padding: 30px; border-radius: 24px; border: 1px solid var(--main-color); width: 80%; }
+        #offline-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .modal-card { background: #161618; padding: 30px; border-radius: 24px; border: 1px solid var(--main-color); width: 75%; }
 
         .nav { background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; }
-        .nav-item { color: #555; font-size: 12px; text-align: center; flex: 1; }
+        .nav-item { color: #444; font-size: 11px; font-weight: bold; text-align: center; flex: 1; cursor: pointer; }
         .nav-item.active { color: var(--main-color); }
     </style>
 </head>
@@ -37,41 +41,42 @@
 
     <div id="offline-modal">
         <div class="modal-card">
-            <h2 style="color: var(--main-color);">С возвращением! 🚀</h2>
-            <p>Твоя колония работала, пока тебя не было.</p>
-            <h1 id="offline-amount" style="color: white;">+0</h1>
-            <button onclick="closeModal()" style="background: var(--main-color); border: none; padding: 12px 30px; border-radius: 12px; font-weight: bold; margin-top: 20px;">ЗАБРАТЬ</button>
+            <h2 style="color: var(--main-color); margin-bottom: 10px;">С возвращением!</h2>
+            <p style="font-size: 14px; color: #888;">Ваши дроны работали (лимит 3ч):</p>
+            <h1 id="offline-amount" style="margin: 15px 0;">+0</h1>
+            <button onclick="closeModal()" style="background: var(--main-color); border: none; padding: 14px 40px; border-radius: 14px; font-weight: bold;">СОБРАТЬ</button>
         </div>
     </div>
 
     <div class="header">
         <div class="amount" id="coins">0</div>
-        <div style="color: #666; font-size: 14px;" id="income-text">Клик: +1 | Авто: +0/с</div>
+        <div class="progress-container"><div class="progress-bar" id="p-bar"></div></div>
+        <div style="color: #666; font-size: 12px; margin-top: 8px;" id="income-text">Клик: +1 | Авто: +0.0/с</div>
     </div>
 
     <div id="game-tab" class="tab-content active">
         <div class="game-area">
-            <div id="lvl-tag" style="color: var(--main-color); font-weight: bold; letter-spacing: 2px;">УРОВЕНЬ 1</div>
+            <div id="lvl-tag" style="color: var(--main-color); font-weight: bold; font-size: 14px;">УРОВЕНЬ: СТАРТ</div>
             <button class="main-btn" id="rocket" onclick="mine(event)">🚀</button>
             <div class="quick-upgrades">
                 <div class="q-up-btn" onclick="upgrade('power')">
-                    <span>Сила клика</span>
-                    <b id="p-price">50 💰</b>
+                    <span>УЛУЧШИТЬ КЛИК</span>
+                    <b id="p-price">10 💰</b>
                 </div>
                 <div class="q-up-btn" onclick="upgrade('passive')">
-                    <span>Авто-добыча</span>
-                    <b id="pas-price">150 💰</b>
+                    <span>АВТО-ДОБЫЧА</span>
+                    <b id="pas-price">100 💰</b>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="shop-tab" class="tab-content">
-        <h2>VIP МАГАЗИН ⭐</h2>
-        <div style="width: 100%; background: #161618; padding: 20px; border-radius: 15px; border: 1px solid var(--star-color);">
-            <b>🤖 Супер Автокликер</b>
-            <p style="font-size: 12px; color: #888;">Добывает в 10 раз быстрее в течение 10 минут</p>
-            <button onclick="buyItem('autoclicker_10')" style="background: var(--star-color); border: none; padding: 10px; width: 100%; border-radius: 10px; font-weight: bold;">100 ⭐</button>
+        <h2 style="margin-bottom: 20px;">VIP СЕКТОР ⭐</h2>
+        <div style="width: 100%; background: #161618; padding: 20px; border-radius: 20px; border: 1px solid var(--star-color);">
+            <b style="color: var(--star-color);">🤖 Квантовый Кликер</b>
+            <p style="font-size: 12px; color: #888; margin: 10px 0;">Автоматически кликает 10 минут, пока вы отдыхаете.</p>
+            <button onclick="buyItem('autoclicker_10')" style="background: var(--star-color); border: none; padding: 12px; width: 100%; border-radius: 12px; font-weight: bold;">100 ⭐</button>
         </div>
     </div>
 
@@ -87,17 +92,19 @@
         let state = {
             coins: Number(localStorage.getItem('coins')) || 0,
             power: Number(localStorage.getItem('power')) || 1,
-            pPrice: Number(localStorage.getItem('pPrice')) || 50,
+            pPrice: Number(localStorage.getItem('pPrice')) || 10,
             passive: Number(localStorage.getItem('passive')) || 0,
-            pasPrice: Number(localStorage.getItem('pasPrice')) || 150,
+            pasPrice: Number(localStorage.getItem('pasPrice')) || 100,
             lastSave: Number(localStorage.getItem('lastSave')) || Date.now()
         };
 
         function calculateOffline() {
             const now = Date.now();
-            const diff = Math.floor((now - state.lastSave) / 1000); // секунд прошло
-            if (diff > 5 && state.passive > 0) {
-                const loot = diff * state.passive;
+            let diff = Math.floor((now - state.lastSave) / 1000);
+            if (diff > 10800) diff = 10800; // Лимит 3 часа
+
+            if (diff > 15 && state.passive > 0) {
+                const loot = Math.floor(diff * state.passive);
                 state.coins += loot;
                 document.getElementById('offline-amount').innerText = `+${loot.toLocaleString()} 💰`;
                 document.getElementById('offline-modal').style.display = 'flex';
@@ -112,9 +119,19 @@
 
         function updateUI() {
             document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
-            document.getElementById('income-text').innerText = `Клик: +${state.power} | Авто: +${state.passive}/с`;
-            document.getElementById('p-price').innerText = `${state.pPrice} 💰`;
-            document.getElementById('pas-price').innerText = `${state.pasPrice} 💰`;
+            document.getElementById('income-text').innerText = `Клик: +${state.power} | Авто: +${state.passive.toFixed(1)}/с`;
+            document.getElementById('p-price').innerText = `${state.pPrice.toLocaleString()} 💰`;
+            document.getElementById('pas-price').innerText = `${state.pasPrice.toLocaleString()} 💰`;
+
+            // Шкала прогресса (до 1000, потом до 10000 и т.д.)
+            let nextMilestone = state.power * 500;
+            let progress = (state.coins / nextMilestone) * 100;
+            document.getElementById('p-bar').style.width = Math.min(progress, 100) + "%";
+
+            // Визуал ракеты
+            const rocket = document.getElementById('rocket');
+            if (state.power >= 50) rocket.innerText = '🛸';
+            else if (state.power >= 20) rocket.innerText = '🛰️';
 
             localStorage.setItem('coins', state.coins);
             localStorage.setItem('power', state.power);
@@ -134,23 +151,25 @@
             if (type === 'power' && state.coins >= state.pPrice) {
                 state.coins -= state.pPrice;
                 state.power += 1;
-                state.pPrice = Math.floor(state.pPrice * 1.5);
+                state.pPrice = Math.floor(state.pPrice * 1.8);
             } else if (type === 'passive' && state.coins >= state.pasPrice) {
                 state.coins -= state.pasPrice;
-                state.passive += 1;
-                state.pasPrice = Math.floor(state.pasPrice * 1.8);
-            } else { return; }
+                state.passive += 0.2; // Добавляем по чуть-чуть
+                state.pasPrice = Math.floor(state.pasPrice * 3.2); // Цена растет ОЧЕНЬ быстро
+            } else {
+                tg.HapticFeedback.notificationOccurred('error');
+                return;
+            }
             tg.HapticFeedback.notificationOccurred('success');
             updateUI();
         }
 
-        // Пассивный доход в реальном времени (раз в секунду)
         setInterval(() => {
             if (state.passive > 0) {
-                state.coins += state.passive;
+                state.coins += (state.passive / 10); // Обновляем 10 раз в сек для плавности
                 updateUI();
             }
-        }, 1000);
+        }, 100);
 
         function openTab(tab, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
