@@ -3,151 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Colony Z - Game</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-color: #00f2ff; --star-color: #ffaa00; --bg-color: #0a0a0c; }
-        body { background: var(--bg-color); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        :root { 
+            --main-color: #00f2ff; 
+            --star-color: #ffaa00; 
+            --bg-color: #0a0a0c; 
+            --card-bg: #161618;
+        }
         
-        /* Шапка с балансом */
-        .header { padding: 20px; text-align: center; flex-shrink: 0; }
-        .amount { font-size: 42px; font-weight: 800; color: var(--main-color); text-shadow: 0 0 15px rgba(0,242,255,0.4); }
+        body { 
+            background: var(--bg-color); 
+            color: white; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            margin: 0; 
+            padding: 0;
+            overflow: hidden; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            user-select: none;
+        }
 
-        /* Контентные области */
-        .tab-content { flex-grow: 1; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        /* Шапка */
+        .header { padding: 25px 20px; text-align: center; flex-shrink: 0; }
+        .amount { font-size: 48px; font-weight: 900; color: var(--main-color); text-shadow: 0 0 20px rgba(0,242,255,0.3); }
+        .income { color: #888; font-size: 14px; margin-top: 5px; }
+
+        /* Контент */
+        .tab-content { 
+            flex-grow: 1; 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            overflow-y: auto; 
+            padding-bottom: 100px;
+        }
         .tab-content.active { display: flex; }
 
-        /* Вкладка ИГРА */
-        .main-btn { width: 220px; height: 220px; border-radius: 50%; border: none; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); box-shadow: 0 0 30px rgba(0,242,255,0.15); cursor: pointer; font-size: 80px; transition: 0.1s; user-select: none; -webkit-tap-highlight-color: transparent; }
-        .main-btn:active { transform: scale(0.9); }
+        /* Игровая кнопка */
+        .main-btn { 
+            width: 240px; 
+            height: 240px; 
+            border-radius: 50%; 
+            border: 8px solid #1a1a1a; 
+            background: radial-gradient(circle, #222 0%, #000 100%); 
+            box-shadow: 0 0 40px rgba(0,242,255,0.1); 
+            cursor: pointer; 
+            font-size: 90px; 
+            transition: transform 0.05s ease; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .main-btn:active { transform: scale(0.92); border-color: var(--main-color); }
 
-        /* Вкладка МАГАЗИН */
-        .shop-list { width: 100%; display: grid; gap: 12px; }
-        .card { background: #161618; border: 1px solid #333; padding: 15px; border-radius: 18px; display: flex; justify-content: space-between; align-items: center; }
-        .card.star { border-color: var(--star-color); }
-        .buy-btn { background: var(--main-color); color: black; border: none; padding: 8px 15px; border-radius: 10px; font-weight: bold; }
-        .buy-btn.star { background: var(--star-color); }
+        /* Магазин */
+        .shop-list { width: 100%; max-width: 400px; }
+        .card { 
+            background: var(--card-bg); 
+            border: 1px solid #282828; 
+            padding: 16px; 
+            border-radius: 20px; 
+            margin-bottom: 12px;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .card.star { border: 1px solid rgba(255, 170, 0, 0.3); background: rgba(255, 170, 0, 0.02); }
+        .card-info b { display: block; font-size: 16px; margin-bottom: 4px; }
+        .card-info span { font-size: 12px; color: #777; }
 
-        /* Нижняя навигация */
-        .nav-bar { background: #111; display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #222; flex-shrink: 0; }
-        .nav-item { color: #555; text-decoration: none; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-        .nav-item.active { color: var(--main-color); }
-        .nav-icon { font-size: 20px; }
+        .btn-buy { 
+            background: var(--main-color); 
+            color: #000; 
+            border: none; 
+            padding: 10px 18px; 
+            border-radius: 12px; 
+            font-weight: 800; 
+            cursor: pointer;
+        }
+        .btn-buy.star { background: var(--star-color); }
+
+        /* Навигация */
+        .nav { 
+            position: fixed; 
+            bottom: 20px; 
+            left: 50%; 
+            transform: translateX(-50%);
+            width: 90%; 
+            background: rgba(20, 20, 22, 0.95); 
+            backdrop-filter: blur(10px);
+            border: 1px solid #333;
+            border-radius: 25px; 
+            display: flex; 
+            padding: 8px; 
+            justify-content: space-around;
+            z-index: 1000;
+        }
+        .nav-item { 
+            padding: 10px 20px; 
+            border-radius: 18px; 
+            text-align: center; 
+            color: #666; 
+            font-size: 12px; 
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .nav-item.active { background: #222; color: var(--main-color); }
+        .nav-item i { display: block; font-size: 20px; font-style: normal; margin-bottom: 4px; }
+
+        /* Анимация клика */
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="amount" id="coins">0</div>
-        <div id="income-text" style="color: #888; font-size: 14px;">+1 за клик</div>
+        <div class="amount" id="balance">0</div>
+        <div class="income" id="income-display">Прибыль: +1</div>
     </div>
 
-    <div id="game-tab" class="tab-content active">
-        <div style="margin-bottom: 20px; font-weight: bold; color: var(--main-color);" id="lvl-tag">УРОВЕНЬ 1</div>
-        <button class="main-btn" id="rocket" onclick="mine(event)">🚀</button>
-        <p style="color: #444; margin-top: 20px;">Кликай на ракету, чтобы добывать энергию</p>
+    <div id="game" class="tab-content active">
+        <div id="lvl-badge" style="color: var(--main-color); font-weight: bold; margin-bottom: 20px;">УРОВЕНЬ 1</div>
+        <button class="main-btn" id="rocket-btn" onclick="handleMine(event)">🚀</button>
     </div>
 
-    <div id="shop-tab" class="tab-content">
-        <h2 style="margin-top: 0;">Магазин</h2>
+    <div id="shop" class="tab-content">
+        <h2 style="width: 100%; margin-bottom: 20px;">Магазин улучшений</h2>
         <div class="shop-list">
             <div class="card">
-                <div>
-                    <div style="font-weight: bold;">Улучшить двигатель</div>
-                    <div style="font-size: 12px; color: #888;">+1 к силе клика</div>
+                <div class="card-info">
+                    <b>Мощный клик</b>
+                    <span>Добавляет +1 к силе клика</span>
                 </div>
-                <button class="buy-btn" onclick="upgrade()" id="price-tag">50 💰</button>
+                <button class="btn-buy" id="upgrade-cost" onclick="buyUpgrade()">50 💰</button>
             </div>
 
             <div class="card star">
-                <div>
-                    <div style="font-weight: bold; color: var(--star-color);">🤖 Автокликер</div>
-                    <div style="font-size: 12px; color: #888;">Работает 10 минут</div>
+                <div class="card-info">
+                    <b style="color: var(--star-color);">🤖 Автокликер</b>
+                    <span>10 кликов в сек. / 10 минут</span>
                 </div>
-                <button class="buy-btn star" onclick="buyItem('autoclicker')">100 ⭐</button>
+                <button class="btn-buy star" onclick="requestStarsPayment('autoclicker_10')">100 ⭐</button>
             </div>
 
             <div class="card star">
-                <div>
-                    <div style="font-weight: bold; color: var(--star-color);">🔥 Супер-Буст</div>
-                    <div style="font-size: 12px; color: #888;">Удваивает всё навсегда</div>
+                <div class="card-info">
+                    <b style="color: var(--star-color);">⚡ Супер множитель</b>
+                    <span>Удваивает доход навсегда</span>
                 </div>
-                <button class="buy-btn star" onclick="buyItem('booster')">250 ⭐</button>
+                <button class="btn-buy star" onclick="requestStarsPayment('multiplier_x2')">250 ⭐</button>
             </div>
         </div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active" onclick="openTab('game', this)">
-            <span class="nav-icon">🚀</span>
-            <span>Игра</span>
-        </div>
-        <div class="nav-item" onclick="openTab('shop', this)">
-            <span class="nav-icon">⭐</span>
-            <span>Магазин</span>
-        </div>
-        <div class="nav-item" onclick="tg.showAlert('Раздел в разработке!')">
-            <span class="nav-icon">🏆</span>
-            <span>Топ</span>
-        </div>
+    <div id="top" class="tab-content">
+        <h2>Лидеры колонии</h2>
+        <p style="color: #555;">Рейтинг обновляется раз в час...</p>
     </div>
+
+    <nav class="nav">
+        <div class="nav-item active" onclick="switchTab('game', this)"><i>🚀</i>Игра</div>
+        <div class="nav-item" onclick="switchTab('shop', this)"><i>⭐</i>Магазин</div>
+        <div class="nav-item" onclick="switchTab('top', this)"><i>🏆</i>Топ</div>
+    </nav>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
+        tg.enableClosingConfirmation();
 
-        let coins = Number(localStorage.getItem('coins')) || 0;
-        let power = Number(localStorage.getItem('power')) || 1;
-        let price = Number(localStorage.getItem('price')) || 50;
-        let multiplier = Number(localStorage.getItem('multiplier')) || 1;
+        // Состояние игры
+        let state = {
+            coins: Number(localStorage.getItem('coins')) || 0,
+            power: Number(localStorage.getItem('power')) || 1,
+            price: Number(localStorage.getItem('price')) || 50,
+            mult: Number(localStorage.getItem('mult')) || 1
+        };
 
-        function openTab(tabName, el) {
-            // Переключение вкладок
+        function updateDisplay() {
+            document.getElementById('balance').innerText = Math.floor(state.coins).toLocaleString();
+            document.getElementById('income-display').innerText = `Прибыль: +${state.power * state.mult}`;
+            document.getElementById('upgrade-cost').innerText = `${state.price} 💰`;
+            
+            // Смена уровня
+            const rocket = document.getElementById('rocket-btn');
+            const badge = document.getElementById('lvl-badge');
+            if (state.power >= 50) { rocket.innerText = '🛸'; badge.innerText = 'УРОВЕНЬ: ГАЛАКТИКА'; }
+            else if (state.power >= 20) { rocket.innerText = '🛰️'; badge.innerText = 'УРОВЕНЬ: ОРБИТА'; }
+
+            // Сохранение
+            localStorage.setItem('coins', state.coins);
+            localStorage.setItem('power', state.power);
+            localStorage.setItem('price', state.price);
+            localStorage.setItem('mult', state.mult);
+        }
+
+        function handleMine(e) {
+            state.coins += (state.power * state.mult);
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            // Анимация числа
+            const x = e.clientX || window.innerWidth / 2;
+            const y = e.clientY || window.innerHeight / 2;
+            const anim = document.createElement('div');
+            anim.innerText = `+${state.power * state.mult}`;
+            anim.style.cssText = `position:fixed; left:${x}px; top:${y}px; color:var(--main-color); font-weight:900; pointer-events:none; animation: floatUp 0.6s ease-out forwards; z-index:9999;`;
+            document.body.appendChild(anim);
+            setTimeout(() => anim.remove(), 600);
+
+            updateDisplay();
+        }
+
+        function switchTab(tabId, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            document.getElementById(tabName + '-tab').classList.add('active');
+            document.getElementById(tabId).classList.add('active');
             el.classList.add('active');
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        function updateUI() {
-            document.getElementById('coins').innerText = Math.floor(coins);
-            document.getElementById('income-text').innerText = `Прибыль: +${power * multiplier}`;
-            document.getElementById('price-tag').innerText = `${price} 💰`;
-            
-            let rocket = document.getElementById('rocket');
-            if (power >= 50) rocket.innerText = '🛸';
-            else if (power >= 20) rocket.innerText = '🛰️';
-            
-            localStorage.setItem('coins', coins);
-            localStorage.setItem('power', power);
-            localStorage.setItem('price', price);
-        }
-
-        function mine(e) {
-            coins += (power * multiplier);
-            tg.HapticFeedback.impactOccurred('medium');
-            updateUI();
-        }
-
-        function upgrade() {
-            if (coins >= price) {
-                coins -= price;
-                power += 1;
-                price = Math.floor(price * 1.6);
-                updateUI();
+        function buyUpgrade() {
+            if (state.coins >= state.price) {
+                state.coins -= state.price;
+                state.power += 1;
+                state.price = Math.floor(state.price * 1.5);
                 tg.HapticFeedback.notificationOccurred('success');
+                updateDisplay();
             } else {
-                tg.showPopup({ message: "Недостаточно монет!" });
+                tg.showAlert("Не хватает монет для апгрейда! Кликай активнее 🚀");
             }
         }
 
-        function buyItem(id) {
-            // Сигнал боту на оплату
-            tg.sendData(JSON.stringify({ action: "buy", item: id }));
+        // ПОКУПКА ЗА ЗВЕЗДЫ
+        function requestStarsPayment(itemId) {
+            tg.showConfirm(`Вы действительно хотите купить этот бонус за Звезды?`, (ok) => {
+                if (ok) {
+                    // Это самая важная часть. Мы отправляем боту JSON-строку.
+                    // Твой сервер на Python должен будет поймать этот текст.
+                    tg.sendData(JSON.stringify({
+                        method: "payment",
+                        item: itemId
+                    }));
+                }
+            });
         }
 
-        updateUI();
+        updateDisplay();
     </script>
 </body>
 </html>
