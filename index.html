@@ -5,57 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --main-color: #00f2ff; --bg-color: #0a0a0c; }
-        body { background: var(--bg-color); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        :root { --main-color: #00f2ff; --star-color: #ffaa00; --bg-color: #0a0a0c; }
+        body { background: var(--bg-color); color: white; font-family: 'Inter', sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; height: 100vh; }
         
-        #game-container { text-align: center; width: 90%; max-width: 400px; }
+        #game-container { text-align: center; width: 90%; max-width: 400px; padding-top: 20px; }
         
-        .balance-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 24px; border: 1px solid rgba(0,242,255,0.2); margin-bottom: 30px; }
-        .amount { font-size: 48px; font-weight: 800; color: var(--main-color); text-shadow: 0 0 20px rgba(0,242,255,0.4); }
+        .balance-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; border: 1px solid rgba(0,242,255,0.2); margin-bottom: 20px; }
+        .amount { font-size: 42px; font-weight: 800; color: var(--main-color); text-shadow: 0 0 15px rgba(0,242,255,0.4); }
         
-        .main-btn { width: 200px; height: 200px; border-radius: 50%; border: none; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); box-shadow: 0 0 30px rgba(0,242,255,0.2); cursor: pointer; position: relative; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 60px; margin: 0 auto; }
-        .main-btn:active { transform: scale(0.92); box-shadow: 0 0 10px var(--main-color); }
-        
-        .ufo-bonus { position: absolute; font-size: 40px; cursor: pointer; animation: fly 4s linear; z-index: 100; }
-        @keyframes fly { from { left: -50px; top: 20%; } to { left: 110%; top: 50%; } }
-        
-        .upgrade-panel { margin-top: 30px; display: grid; gap: 10px; }
-        .up-btn { background: #1a1a1a; border: 1px solid #333; color: #888; padding: 12px; border-radius: 12px; font-size: 14px; text-align: left; display: flex; justify-content: space-between; }
-        .up-btn.active { border-color: var(--main-color); color: white; }
+        .main-btn { width: 180px; height: 180px; border-radius: 50%; border: none; background: radial-gradient(circle, #1a1a1a 0%, #000 100%); box-shadow: 0 0 25px rgba(0,242,255,0.15); cursor: pointer; position: relative; transition: 0.1s; display: flex; align-items: center; justify-content: center; font-size: 65px; margin: 0 auto; user-select: none; -webkit-tap-highlight-color: transparent; }
+        .main-btn:active { transform: scale(0.9); }
+
+        .shop-container { margin-top: 20px; width: 100%; display: grid; gap: 8px; }
+        .up-btn { background: #161618; border: 1px solid #333; color: white; padding: 12px 15px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .up-btn b { color: var(--main-color); }
+        .star-btn { border-color: var(--star-color); color: var(--star-color); font-weight: bold; }
+
+        .level-badge { background: var(--main-color); color: black; padding: 2px 10px; border-radius: 10px; font-weight: bold; font-size: 12px; margin-bottom: 5px; display: inline-block; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
+        <div class="level-badge" id="lvl-tag">УРОВЕНЬ 1</div>
         <div class="balance-card">
-            <div style="font-size: 14px; color: #888; text-transform: uppercase;">Крипто-Энергия</div>
             <div class="amount" id="coins">0</div>
-            <div id="income-text" style="color: #00ff88; font-size: 14px;">+1 / клик</div>
+            <div id="income-text" style="color: #888; font-size: 14px;">+1 за клик</div>
         </div>
 
-        <button class="main-btn" onclick="mine(event)">🚀</button>
+        <button class="main-btn" id="rocket" onclick="mine(event)">🚀</button>
 
-        <div class="upgrade-panel">
-            <button class="up-btn active" onclick="upgrade()" id="up-btn">
-                <span>Улучшить двигатель</span>
+        <div class="shop-container">
+            <div class="up-btn" onclick="upgrade()">
+                <span>Улучшить движок</span>
                 <b id="price-tag">50 💰</b>
-            </button>
+            </div>
+
+            <div class="up-btn star-btn" onclick="buyItem('autoclicker')">
+                <span>🤖 Автокликер (10 мин)</span>
+                <span>100 ⭐</span>
+            </div>
+            <div class="up-btn star-btn" onclick="buyItem('booster')">
+                <span>🔥 Буст прибыли x2</span>
+                <span>250 ⭐</span>
+            </div>
         </div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.backgroundColor = '#0a0a0c';
 
         let coins = Number(localStorage.getItem('coins')) || 0;
         let power = Number(localStorage.getItem('power')) || 1;
         let price = Number(localStorage.getItem('price')) || 50;
+        let multiplier = Number(localStorage.getItem('multiplier')) || 1;
 
         function updateUI() {
             document.getElementById('coins').innerText = Math.floor(coins);
-            document.getElementById('income-text').innerText = `+${power} / клик`;
+            document.getElementById('income-text').innerText = `+${power * multiplier} за клик`;
             document.getElementById('price-tag').innerText = `${price} 💰`;
+            
+            // Смена ракеты в зависимости от уровня прокачки (power)
+            let rocket = document.getElementById('rocket');
+            let lvlTag = document.getElementById('lvl-tag');
+            if (power >= 50) { rocket.innerText = '🛸'; lvlTag.innerText = 'УРОВЕНЬ: ГАЛАКТИКА'; }
+            else if (power >= 25) { rocket.innerText = '🛰️'; lvlTag.innerText = 'УРОВЕНЬ: ОРБИТА'; }
+            else if (power >= 10) { rocket.innerText = '✈️'; lvlTag.innerText = 'УРОВЕНЬ: НЕБО'; }
             
             localStorage.setItem('coins', coins);
             localStorage.setItem('power', power);
@@ -63,21 +79,16 @@
         }
 
         function mine(e) {
-            coins += power;
+            coins += (power * multiplier);
             tg.HapticFeedback.impactOccurred('medium');
             
-            // Визуальный эффект клика
-            const clickAnim = document.createElement('div');
-            clickAnim.innerText = `+${power}`;
-            clickAnim.style.position = 'absolute';
-            clickAnim.style.left = `${e.clientX}px`;
-            clickAnim.style.top = `${e.clientY}px`;
-            clickAnim.style.color = '#00f2ff';
-            clickAnim.style.fontWeight = 'bold';
-            clickAnim.style.pointerEvents = 'none';
-            document.body.appendChild(clickAnim);
+            // Всплывающее число +1
+            const plus = document.createElement('div');
+            plus.innerText = `+${power * multiplier}`;
+            plus.style.cssText = `position:absolute; left:${e.clientX}px; top:${e.clientY}px; color:var(--main-color); font-weight:bold; pointer-events:none; animation: fadeUp 0.8s forwards;`;
+            document.body.appendChild(plus);
+            setTimeout(() => plus.remove(), 800);
             
-            setTimeout(() => clickAnim.remove(), 800);
             updateUI();
         }
 
@@ -85,28 +96,24 @@
             if (coins >= price) {
                 coins -= price;
                 power += 1;
-                price = Math.floor(price * 1.8);
+                price = Math.floor(price * 1.6);
                 tg.HapticFeedback.notificationOccurred('success');
                 updateUI();
+            } else {
+                tg.HapticFeedback.notificationOccurred('error');
             }
         }
 
-        // Появление бонусного НЛО
-        setInterval(() => {
-            if (Math.random() > 0.7) {
-                const ufo = document.createElement('div');
-                ufo.className = 'ufo-bonus';
-                ufo.innerText = '🛸';
-                ufo.onclick = () => {
-                    coins += (power * 50);
-                    ufo.remove();
-                    tg.HapticFeedback.notificationOccurred('warning');
-                    updateUI();
-                };
-                document.body.appendChild(ufo);
-                setTimeout(() => ufo.remove(), 4000);
-            }
-        }, 10000);
+        function buyItem(id) {
+            // Отправляем данные в RoboChat
+            tg.sendData(JSON.stringify({ action: "buy", item: id }));
+            tg.HapticFeedback.impactOccurred('heavy');
+        }
+
+        // Анимация всплывающих цифр
+        const style = document.createElement('style');
+        style.innerHTML = `@keyframes fadeUp { to { transform: translateY(-50px); opacity: 0; } }`;
+        document.head.appendChild(style);
 
         updateUI();
     </script>
